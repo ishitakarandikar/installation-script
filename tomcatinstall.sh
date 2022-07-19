@@ -15,8 +15,14 @@ check_java_home() {
        read -p  "Do you wish to install Java?[Y/N]:" ans
 
     case $ans in
-        [Yy] ) update; install_java; echo "please setup JAVA_HOME";;
-        [Nn] ) echo "Please install java";;
+        [Yy] ) update; install_java; set_javahome ;;
+        [Nn] ) read -p "Please install java or if you already have Java, Do you wish to set your JAVA_HOME path?[Y/N]:" res
+                      case $res in
+                      [Yy] ) set_javahome ;;
+                      [Nn] ) echo "Please set JAVA_HOME manually" ; exit 1 ;;
+           esac
+
+
     esac
 
 
@@ -33,14 +39,34 @@ check_java_home() {
 }
 update()
 {
-sudo atp-get update
+sudo apt-get update
 }
 
+set_javahome()
+{
+
+path="JAVA_HOME="/usr/lib/jvm/java-11-openjdk-amd64""
+if grep "$path" /etc/environment > /dev/null
+then
+echo "path already set"
+
+else
+echo "JAVA_HOME="/usr/lib/jvm/java-11-openjdk-amd64"" >> /etc/environment
+./etc/environment
+exit 1
+
+fi
+}
 
 install_java()
 {
 sudo apt-get install default-jdk
 sudo apt-get install default-jre
+if [ $? -eq 0 ]; then
+  echo "Please set JAVA_HOME"
+else
+  echo "Error in Java Installation"
+fi
 
 }
 
@@ -77,6 +103,8 @@ read -p  "Do you wish to start tomcat?[Y/N]:" ans
 }
 
 echo 'Installing tomcat server...'
+echo "Updating..."
+update
 echo 'Checking for JAVA_HOME...'
 check_java_home
 if [ $? -eq 0  ]; then
